@@ -269,7 +269,7 @@ function calculateBulletWay(){
     if (deltaX < 0){   
         dv[0] = -1;
     }
-    return dv;
+    return dv; // return array
 }
 
 function drawAim() {
