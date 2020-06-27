@@ -11,10 +11,14 @@ const aimImage = new Image();
 aimImage.src = 'images/Aim.png';
 const bulletImage = new Image();
 bulletImage.src = 'images/bullet.png'
+const enemyImage = new Image();
+enemyImage.src = 'images/humanoid.png';
+const explImg = new Image();
+explImg.src = 'images/explosprite.png';
 
-let bg, player, start, anim, aim, vBullet;
+let bg, player, start, anim, aim, vBullet, enemy;
 // let laser;
-const stars = [], bullets = [];
+const stars = [], bullets = [], explosion = [];
 
 function playGame() {
     start = true;
@@ -57,6 +61,10 @@ function render() {
     ctx.drawImage(playerImage, player.x, player.y, player.w, player.h);
     ctx.restore();
 
+    // enemy
+    ctx.drawImage(enemyImage, enemy.x, enemy.y, enemy.w, enemy.h);
+
+    // aim
     ctx.save();
     ctx.fillStyle = 'rgba(219, 20, 20, 1)';
     ctx.strokeStyle = 'rgba(219, 20, 20, 1)';
@@ -115,6 +123,15 @@ function render() {
         ctx.restore();
     }
 
+    // рисуем взрывы
+    for (let i = 0; i < explosion.length; i++) {
+        ctx.drawImage(
+            explImg, 64 * Math.floor(explosion[i].animX),
+            64 * Math.floor(explosion[i].animY), 64, 64,
+            explosion[i].x, explosion[i].y, explosion[i].w, explosion[i].h
+        );
+    }
+
 }
 
 function update() {
@@ -132,12 +149,38 @@ function update() {
         } */
 
     for (let i = 0; i < bullets.length; i++) {
-        if (bullets[i].way[0] > 0) {
+        let centerBulletX = bullets[i].x + bullets[i].w / 2;
+        let centerBulletY = bullets[i].y + bullets[i].h / 2;
+        if (centerBulletX >= enemy.x && centerBulletX <= enemy.x + enemy.w && centerBulletY >= enemy.y && centerBulletY <= enemy.y + enemy.h) {
+            explosion.push({
+                x: enemy.x - 50,
+                y: enemy.y - 20,
+                w: 100,
+                h: 100,
+                animX: 0,
+                animY: 0
+            });
+            bullets.splice(i, 1);
+            enemy.w = 0;
+            enemy.h = 0;
+        } else if (bullets[i].way[0] > 0) {
             bullets[i].x += bullets[i].way[1];
             bullets[i].y += bullets[i].way[2];
             bullets[i].way[0]--;
         } else {
             bullets.splice(i, 1);
+        }
+    }
+
+    // Анимация взрыва
+    for (let i = 0; i < explosion.length; i++) {
+        explosion[i].animX += 0.5;
+        if (explosion[i].animX > 3) {
+            explosion[i].animY++;
+            explosion[i].animX = 0;
+        }
+        if (explosion[i].animY > 3) {
+            explosion.splice(i, 1);
         }
     }
 
@@ -178,6 +221,13 @@ function init() {
             len: 10,
             time: 0
         } */
+    enemy = {
+        x: 300,
+        y: 200,
+        w: 30,
+        h: 50,
+
+    }
 
     document.addEventListener('keydown', playerMove);
     document.addEventListener('mousemove', playerRotate);
