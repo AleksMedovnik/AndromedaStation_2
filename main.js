@@ -12,7 +12,7 @@ aimImage.src = 'images/Aim.png';
 const bulletImage = new Image();
 bulletImage.src = 'images/bullet.png'
 
-let bg, player, start, anim, aim;
+let bg, player, start, anim, aim, vBullet;
 // let laser;
 const stars = [], bullets = [];
 
@@ -32,15 +32,15 @@ function render() {
         ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-    
-        ctx.save(); 
+
+        ctx.save();
         ctx.beginPath();
         ctx.arc(star.x + star.radius, star.y + star.radius, star.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.beginPath();       
+        ctx.beginPath();
         ctx.arc(star.x + star.radius, star.y - star.radius, star.radius, 0, Math.PI * 2);
-        ctx.fill(); 
-        ctx.beginPath(); 
+        ctx.fill();
+        ctx.beginPath();
         ctx.arc(star.x - star.radius, star.y + star.radius, star.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
@@ -91,22 +91,22 @@ function render() {
     ctx.stroke();
     ctx.restore();
 
-    
+
     // laser
-/*     if (laser.time > 0){
-        ctx.save();
-        ctx.strokeStyle = 'rgba(219, 20, 20, .7)';
-        ctx.lineWidth = 2;
-        
-        ctx.beginPath();
-        ctx.moveTo(laser.x_1, laser.y_1);
-        ctx.lineTo(laser.x_2, laser.y_2);
-        ctx.stroke();
-        ctx.restore();
-    } */
+    /*     if (laser.time > 0){
+            ctx.save();
+            ctx.strokeStyle = 'rgba(219, 20, 20, .7)';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(laser.x_1, laser.y_1);
+            ctx.lineTo(laser.x_2, laser.y_2);
+            ctx.stroke();
+            ctx.restore();
+        } */
 
     // bullets
-    for (let bullet of bullets){
+    for (let bullet of bullets) {
         ctx.save();
         ctx.translate(bullet.x + bullet.w / 2, bullet.y + bullet.h / 2);
         ctx.rotate(bullet.r);
@@ -123,17 +123,22 @@ function update() {
         const deltaTime = now - then;
         then = Date.now(); */
 
-    for (let star of stars){
+    for (let star of stars) {
         star.setOpacity();
     }
-        
-/*     if (laser.time > 0){
-        laser.time--;
-    } */
-    
-    for (let bullet of bullets){
-        bullet.x += bullet.dx * bullet.dv[0];
-        bullet.y += bullet.dx / bullet.dv[1];
+
+    /*     if (laser.time > 0){
+            laser.time--;
+        } */
+
+    for (let i = 0; i < bullets.length; i++) {
+        if (bullets[i].way[0] > 0) {
+            bullets[i].x += bullets[i].way[1];
+            bullets[i].y += bullets[i].way[2];
+            bullets[i].way[0]--;
+        } else {
+            bullets.splice(i, 1);
+        }
     }
 
 };
@@ -160,18 +165,19 @@ function init() {
         h: 42
     }
 
-    for (let i = 0; i <= 500; i++){
+    for (let i = 0; i <= 500; i++) {
         stars.push(new CreateStar());
     }
+    vBullet = 20; //  скорость пули
 
-/*     laser = {
-        x_1: 0,
-        y_1: 0,
-        x_2: 0,
-        y_2: 0,
-        len: 10,
-        time: 0
-    } */
+    /*     laser = {
+            x_1: 0,
+            y_1: 0,
+            x_2: 0,
+            y_2: 0,
+            len: 10,
+            time: 0
+        } */
 
     document.addEventListener('keydown', playerMove);
     document.addEventListener('mousemove', playerRotate);
@@ -181,41 +187,41 @@ function init() {
 
 
 };
-function playerMove() { 
+function playerMove() {
     if (player.y <= canvas.height / 2 - 100) {
         player.y = canvas.height / 2 - 100;
-        for (let star of stars){
+        for (let star of stars) {
             star.y += player.d;
-            if (star.y > canvas.height){
+            if (star.y > canvas.height) {
                 star.y = 0;
-            }          
+            }
         };
     }
     if (player.y >= canvas.height / 2 + 100) {
         player.y = canvas.height / 2 + 100;
-        for (let star of stars){
+        for (let star of stars) {
             star.y -= player.d;
-            if (star.y < 0){
+            if (star.y < 0) {
                 star.y = canvas.height;
-            }          
+            }
         };
     }
     if (player.x <= canvas.width / 2 - 100) {
         player.x = canvas.width / 2 - 100;
-        for (let star of stars){
+        for (let star of stars) {
             star.x += player.d;
-            if (star.x > canvas.width){
+            if (star.x > canvas.width) {
                 star.x = 0;
-            }          
+            }
         };
     }
     if (player.x >= canvas.width / 2 + 100) {
         player.x = canvas.width / 2 + 100;
-        for (let star of stars){
+        for (let star of stars) {
             star.x -= player.d;
-            if (star.x < 0){
+            if (star.x < 0) {
                 star.x = canvas.width;
-            }          
+            }
         };
     }
 
@@ -250,26 +256,30 @@ function playerRotate() {
     player.r = getAngle();
 }
 
-function getAngle(){
+function getAngle() {
     const deltaX = event.clientX - (player.x + player.w / 2);
     const deltaY = event.clientY - (player.y + player.h / 2);
     let angle = Math.acos(deltaX / Math.sqrt(deltaX ** 2 + deltaY ** 2));
-    if (deltaY < 0){
+    if (deltaY < 0) {
         angle = -angle;
     }
     return angle;
 }
 
-function calculateBulletWay(){
-    const dv = [1, 0];
+function calculateBulletWay() {
     const deltaX = event.clientX - (player.x + player.w / 2);
     const deltaY = event.clientY - (player.y + player.h / 2);
-    const ctg = deltaX / deltaY;
-    dv[1] = ctg;
-    if (deltaX < 0){   
-        dv[0] = -1;
-    }
-    return dv; // return array
+    const path = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+    const cos = deltaX / path;
+    const sin = deltaY / path;
+    let dvx = vBullet * cos;
+    let dvy = vBullet * sin;
+
+    let frame = (vBullet <= path) ? (path / vBullet) : 0;
+
+    const way = [frame, dvx, dvy];
+    return way;
+
 }
 
 function drawAim() {
@@ -283,11 +293,11 @@ function CreateStar() {
     this.radius = Math.random() * 6;
     this.opacity = Math.random() * 0.3 + 0.6;
     this.coefOpacity = 0.004;
-    this.setOpacity = function () {           
-        if (this.opacity <= 0.4 || this.opacity >= 1.0){
+    this.setOpacity = function () {
+        if (this.opacity <= 0.4 || this.opacity >= 1.0) {
             this.coefOpacity = -this.coefOpacity;
-        } 
-        this.opacity += this.coefOpacity;   
+        }
+        this.opacity += this.coefOpacity;
     }
 }
 
@@ -300,17 +310,14 @@ function CreateStar() {
     laser.y_2 = event.clientY;
 } */
 
-function drawBullets(){
+function drawBullets() {
     bullets.push({
         x: player.x + player.w / 2,
         y: player.y + player.h / 2,
         w: 25,
         h: 16,
-        r: getAngle(), 
-        dx: 30,
-        // dy: this.dx / calculateBulletWay()
-        dy: 0,
-        dv: calculateBulletWay()
+        r: getAngle(),
+        way: calculateBulletWay()
     })
 }
 window.onload = () => playGame();  
