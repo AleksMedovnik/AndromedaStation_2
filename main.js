@@ -12,7 +12,7 @@ aimImage.src = 'images/Aim.png';
 const bulletImage = new Image();
 bulletImage.src = 'images/bullet.png'
 const enemyImage = new Image();
-enemyImage.src = 'images/humanoid.png';
+enemyImage.src = 'images/enemy.png';
 const explImg = new Image();
 explImg.src = 'images/explosprite.png';
 
@@ -62,7 +62,8 @@ function render() {
     ctx.restore();
 
     // enemy
-    ctx.drawImage(enemyImage, enemy.x, enemy.y, enemy.w, enemy.h);
+    ctx.drawImage(enemyImage, enemy.animW * Math.floor(enemy.animX),
+        enemy.animW * Math.floor(enemy.animY), enemy.animW, enemy.animH, enemy.x, enemy.y, enemy.w, enemy.h);
 
     // aim
     ctx.save();
@@ -206,7 +207,12 @@ function update() {
     let dxy = calculateEnemyPath();
     enemy.x += dxy[0];
     enemy.y += dxy[1];
-
+    // enemy animation
+    if (enemy.animX > 3) {
+        enemy.animX = 0;
+    } else {
+        enemy.animX += 0.5;
+    }
 
 };
 
@@ -253,8 +259,12 @@ function init() {
     enemy = {
         x: Math.random() * (canvas.width + 600) - 300,
         y: Math.random() * (canvas.height + 600) - 300,
-        w: 30,
-        h: 50,
+        w: 40,
+        h: 56,
+        animX: 0,
+        animY: 0,
+        animW: 80,
+        animH: 102
 
     }
 
