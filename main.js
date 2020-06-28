@@ -16,7 +16,7 @@ enemyImage.src = 'images/humanoid.png';
 const explImg = new Image();
 explImg.src = 'images/explosprite.png';
 
-let bg, player, start, anim, aim, vBullet, enemy;
+let start, end, timerFinishGame, player, anim, aim, vBullet, vEnemy, enemy;
 // let laser;
 const stars = [], bullets = [], explosion = [];
 
@@ -135,6 +135,8 @@ function render() {
 }
 
 function update() {
+    if (end) timerFinishGame--;
+    if (timerFinishGame <= 0) start = false;
     /*     // console.log(Date.now() - then);
         let now = Date.now() * 0.001;
         const deltaTime = now - then;
@@ -148,6 +150,7 @@ function update() {
             laser.time--;
         } */
 
+    // animation bullet
     for (let i = 0; i < bullets.length; i++) {
         let centerBulletX = bullets[i].x + bullets[i].w / 2;
         let centerBulletY = bullets[i].y + bullets[i].h / 2;
@@ -161,8 +164,8 @@ function update() {
                 animY: 0
             });
             bullets.splice(i, 1);
-            enemy.w = 0;
-            enemy.h = 0;
+            enemy.x = Math.random() * (canvas.width + 600) - 300;
+            enemy.y = Math.random() * (canvas.width + 600) - 300;
         } else if (bullets[i].way[0] > 0) {
             bullets[i].x += bullets[i].way[1];
             bullets[i].y += bullets[i].way[2];
@@ -170,6 +173,21 @@ function update() {
         } else {
             bullets.splice(i, 1);
         }
+    }
+
+    // collision with enemy
+    if (enemy.x + enemy.w / 2 >= player.x && enemy.x + enemy.w / 2 <= player.x + player.w && enemy.y + enemy.h / 2 >= player.y && enemy.y + enemy.h / 2 <= player.y + player.h) {
+        explosion.push({
+            x: enemy.x - 50,
+            y: enemy.y - 20,
+            w: 100,
+            h: 100,
+            animX: 0,
+            animY: 0
+        });
+        enemy.w = 0;
+        player.w = 0;
+        end = true;
     }
 
     // Анимация взрыва
@@ -184,15 +202,26 @@ function update() {
         }
     }
 
+    // enemy is moving
+    let dxy = calculateEnemyPath();
+    enemy.x += dxy[0];
+    enemy.y += dxy[1];
+
+
 };
 
 function game() {
-    update();
-    render();
-    anim = requestAnimationFrame(game);
+    if (start) {
+        update();
+        render();
+        anim = requestAnimationFrame(game);
+    }
 }
 
 function init() {
+    start = true;
+    end = false;
+    timerFinishGame = 30;
     player = {
         x: canvas.width / 2,
         y: canvas.height / 2,
@@ -212,7 +241,7 @@ function init() {
         stars.push(new CreateStar());
     }
     vBullet = 20; //  скорость пули
-
+    vEnemy = 5;
     /*     laser = {
             x_1: 0,
             y_1: 0,
@@ -222,8 +251,8 @@ function init() {
             time: 0
         } */
     enemy = {
-        x: 300,
-        y: 200,
+        x: Math.random() * (canvas.width + 600) - 300,
+        y: Math.random() * (canvas.height + 600) - 300,
         w: 30,
         h: 50,
 
@@ -316,22 +345,6 @@ function getAngle() {
     return angle;
 }
 
-function calculateBulletWay() {
-    const deltaX = event.clientX - (player.x + player.w / 2);
-    const deltaY = event.clientY - (player.y + player.h / 2);
-    const path = Math.sqrt(deltaX ** 2 + deltaY ** 2);
-    const cos = deltaX / path;
-    const sin = deltaY / path;
-    let dvx = vBullet * cos;
-    let dvy = vBullet * sin;
-
-    let frame = (vBullet <= path) ? (path / vBullet) : 0;
-
-    const way = [frame, dvx, dvy];
-    return way;
-
-}
-
 function drawAim() {
     aim.x = event.clientX;
     aim.y = event.clientY;
@@ -367,7 +380,39 @@ function drawBullets() {
         w: 25,
         h: 16,
         r: getAngle(),
-        way: calculateBulletWay()
+        way: calculateBulletPath()
     })
+}
+
+function calculateBulletPath() {
+    const deltaX = event.clientX - (player.x + player.w / 2);
+    const deltaY = event.clientY - (player.y + player.h / 2);
+    const path = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+    const cos = deltaX / path;
+    const sin = deltaY / path;
+    let dvx = vBullet * cos;
+    let dvy = vBullet * sin;
+
+    let frame = (vBullet <= path) ? (path / vBullet) : 0;
+
+    const way = [frame, dvx, dvy];
+    return way;
+
+}
+function calculateEnemyPath() {
+    const playerCenterPointX = player.x + player.w / 2;
+    const playerCenterPointY = player.y + player.h / 2;
+    const enemyCenterPointX = enemy.x + enemy.w / 2;
+    const enemyCenterPointY = enemy.y + enemy.h / 2;
+    const deltaX = playerCenterPointX - enemyCenterPointX;
+    const deltaY = playerCenterPointY - enemyCenterPointY;
+    const path = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+    const cos = deltaX / path;
+    const sin = deltaY / path;
+    let dvx = vEnemy * cos;
+    let dvy = vEnemy * sin;
+
+    const way = [dvx, dvy];
+    return way;
 }
 window.onload = () => playGame();  
