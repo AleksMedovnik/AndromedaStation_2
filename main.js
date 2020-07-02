@@ -63,7 +63,7 @@ function render() {
 
     // enemy
     ctx.drawImage(enemyImage, enemy.animW * Math.floor(enemy.animX),
-        enemy.animW * Math.floor(enemy.animY), enemy.animW, enemy.animH, enemy.x, enemy.y, enemy.w, enemy.h);
+        enemy.animH * Math.floor(enemy.animY), enemy.animW, enemy.animH, enemy.x, enemy.y, enemy.w, enemy.h);
 
     // aim
     ctx.save();
@@ -208,10 +208,13 @@ function update() {
     enemy.x += dxy[0];
     enemy.y += dxy[1];
     // enemy animation
-    if (enemy.animX > 3) {
+    enemy.animX += enemy.dAnimX;
+    if (enemy.animX > 1) {
+        enemy.animY++;
         enemy.animX = 0;
-    } else {
-        enemy.animX += 0.5;
+    }
+    if (enemy.animY > 1) {
+        enemy.animY = 0;
     }
 
 };
@@ -260,12 +263,12 @@ function init() {
         x: Math.random() * (canvas.width + 600) - 300,
         y: Math.random() * (canvas.height + 600) - 300,
         w: 40,
-        h: 56,
+        h: 40,
         animX: 0,
         animY: 0,
-        animW: 80,
-        animH: 102
-
+        animW: 500,
+        animH: 500,
+        dAnimX: 0.1,
     }
 
     document.addEventListener('keydown', playerMove);
